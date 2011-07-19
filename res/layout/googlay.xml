@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    >
+	<ImageView
+		android:src="@drawable/top_banner"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:gravity="center_vertical|center_horizontal"
+		android:layout_gravity="center_vertical|center_horizontal|center"
+    />    
+	<ProgressBar
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:visibility="invisible"
+		style="?android:attr/progressBarStyleHorizontal"
+		android:id="@+id/pbar_H"
+		android:max="10000000"
+		android:layout_marginTop="20dip"
+	/>
+	<Button android:id="@+id/greqBut"
+		android:text="@string/googBut"		
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content" 
+		android:paddingRight="20dp" 
+		android:paddingLeft="20dp"
+		android:layout_marginTop="10dip"
+		android:gravity="center_vertical|center_horizontal"
+		android:layout_gravity="center_vertical|center_horizontal|center"
+	/>
+</LinearLayout>
