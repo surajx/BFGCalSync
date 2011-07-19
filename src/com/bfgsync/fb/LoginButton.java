@@ -61,19 +61,20 @@ public class LoginButton extends ImageButton {
     	init(activity, fb, new String[] {});
     }
     
-    public void init(final Activity activity, final Facebook fb,
-                     final String[] permissions) {
+    public void init(final Activity activity, final Facebook fb, final String[] permissions) {
+    	
+    	//Initialize the variables.
         mActivity = activity;
         mFb = fb;
         mPermissions = permissions;
         mHandler = new Handler();
         
+        //Set UI view
         setBackgroundColor(Color.TRANSPARENT);
         setAdjustViewBounds(true);
-        setImageResource(fb.isSessionValid() ?
-                         R.drawable.logout_button : 
-                         R.drawable.login_button);
+        setImageResource(fb.isSessionValid() ? R.drawable.logout_button : R.drawable.login_button);
         drawableStateChanged();
+        
         
         SessionEvents.addAuthListener(mSessionListener);
         SessionEvents.addLogoutListener(mSessionListener);

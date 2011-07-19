@@ -35,40 +35,56 @@ import com.facebook.android.Util;
 
 public class bfgActivity extends Activity {
 	
+	//APP_ID as received from FB apps
 	public static final String APP_ID = "100917329990307";
 
+	//Progress bar to show Fetch friends birthday progress.
     private ProgressBar mProgressBar;
     private int mProgress = 0;
 
-	
+	//UI controls
 	private LoginButton mLoginButton;
 	private TextView mText;
 	private Button mRequestButton;
 	
+	//FB Objects
 	private Facebook mFacebook;
 	private AsyncFacebookRunner mAsyncRunner;
-		
+
+	//A collection for storing birthday Data.
 	private HashMap<String,FFriend> mFriendData;
 	
+	//Flag variables.
 	private boolean fLogout= false;
 	private boolean fComplete= false;
 
+	
     @Override
     public void onCreate(Bundle savedInstanceState) {
+    	
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
+        
+        //Setting UI controls
         mLoginButton = (LoginButton) findViewById(R.id.login);
         mText = (TextView) bfgActivity.this.findViewById(R.id.txt);
         mRequestButton = (Button) findViewById(R.id.requestButton);
         mProgressBar=(ProgressBar)findViewById(R.id.progressbar_Horizontal);
         mProgressBar.setVisibility(View.INVISIBLE);
         
+        //Initialising Facebook controls.
         mFacebook = new Facebook(APP_ID);
         mAsyncRunner = new AsyncFacebookRunner(mFacebook);
+        
+        //Restore any any existing FB sessions.
         SessionStore.restore(mFacebook, this);
+        
+        //Creating Login/Logout Listners.
         SessionEvents.addAuthListener(new SampleAuthListener());
         SessionEvents.addLogoutListener(new SampleLogoutListener());
-        mLoginButton.init(this, mFacebook, new String[] { "friends_birthday" });        
+        
+        
+        mLoginButton.init(this, mFacebook, new String[] { "friends_birthday" });   
         mRequestButton. setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
             	if(!fComplete){

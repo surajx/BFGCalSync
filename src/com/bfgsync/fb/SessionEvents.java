@@ -96,6 +96,7 @@ public class SessionEvents {
             l.onLogoutFinish();
         }   
     }
+
     
     /**
      * Callback interface for authorization events.
