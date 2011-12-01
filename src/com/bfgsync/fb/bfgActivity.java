@@ -3,7 +3,7 @@ package com.bfgsync.fb;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.util.Collection;
+import java.util.Calendar;
 import java.util.HashMap;
 
 import org.json.JSONArray;
@@ -11,8 +11,14 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.Activity;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.CalendarContract.Calendars;
+import android.provider.CalendarContract.Events;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -20,12 +26,9 @@ import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.bfgsync.R.id;
-import com.bfgsync.R.layout;
 import com.bfgsync.fb.BaseRequestListener;
 import com.bfgsync.fb.SessionEvents.AuthListener;
 import com.bfgsync.fb.SessionEvents.LogoutListener;
-import com.bfgsync.gcal.CalActivity;
 import com.bfgsync.R;
 
 import com.facebook.android.AsyncFacebookRunner;
@@ -33,7 +36,8 @@ import com.facebook.android.Facebook;
 import com.facebook.android.FacebookError;
 import com.facebook.android.Util;
 
-public class bfgActivity extends Activity {
+public class bfgActivity extends Activity 
+{
 	
 	//APP_ID as received from FB apps
 	public static final String APP_ID = "100917329990307";
@@ -60,7 +64,8 @@ public class bfgActivity extends Activity {
 
 	
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) 
+    {
     	
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
@@ -85,72 +90,112 @@ public class bfgActivity extends Activity {
         
         
         mLoginButton.init(this, mFacebook, new String[] { "friends_birthday" });   
-        mRequestButton. setOnClickListener(new OnClickListener() {
-            public void onClick(View v) {
-            	if(!fComplete){
-	            	final Bundle params = new Bundle();
-	            	mProgressBar.setVisibility(View.VISIBLE);
-	            	mRequestButton.setVisibility(View.INVISIBLE);
-	            	mText.setText("Requesting birthday list...");
-	                mAsyncRunner.request("me/friends", params, "GET", new FriendsListListener(), null);
-            	}
-            	else{
-                	Intent gData = new Intent(bfgActivity.this, CalActivity.class);
-                	Collection<FFriend> f_col= mFriendData.values();
-                	FFriend fArray[] = new FFriend[mFriendData.size()]; 
-                	fArray = f_col.toArray(fArray);
-                	Bundle newAct = new Bundle();
-                	for(int i=0;i<fArray.length;i++ )
-                	{	                		
-                		String val= fArray[i].getName()+":"+fArray[i].getBday();
-                		newAct.putString(Integer.toString(i), val);
-                	}
-                	newAct.putString("tot", Integer.toString(fArray.length));
-                	gData.putExtra("fBundle", newAct);
-                	startActivity(gData);
-            	}
-            }
-        });
-        mRequestButton.setVisibility(mFacebook.isSessionValid() ?
-                View.VISIBLE :
-                View.INVISIBLE);
+        mRequestButton.setOnClickListener(
+        		new OnClickListener() 
+        		{
+		            public void onClick(View v) 
+		            {
+		            	if(!fComplete)
+		            	{
+			            	final Bundle params = new Bundle();
+			            	mProgressBar.setVisibility(View.VISIBLE);
+			            	mRequestButton.setVisibility(View.INVISIBLE);
+			            	mText.setText("Requesting friends list...");
+			                mAsyncRunner.request("me/friends", params, "GET", new FriendsListListener(), null);
+			                mText.setText("Processing...");
+		            	}
+		            	else{
+		            		mRequestButton.setVisibility(View.INVISIBLE);
+		            		mText.setText("Adding Events to default Calendar... Please wait!");
+  	            		    final String[] EVENT_PROJECTION = new String[] {
+		            			    Calendars._ID,                           // 0
+		            			  };
+							final int PROJECTION_ID_INDEX = 0;
+							Cursor cur = null;
+							ContentResolver crs = getContentResolver();
+							Uri uri1 = Calendars.CONTENT_URI;
+							cur = crs.query(uri1, EVENT_PROJECTION, null, null, null);
+							long calID =  0;
+							while (cur.moveToNext()) {        							  
+							    calID = cur.getLong(PROJECTION_ID_INDEX);
+							    Log.d("bfgActivity", "calID: " + calID);
+							}
+		            		long startMillis = 0;
+		            		Calendar beginTime = Calendar.getInstance();            		
+		            		for (FFriend frnd : mFriendData.values())
+		            		{		            					            					            			
+		            			String raw_bday=frnd.getBday();
+		            			if("".equals(raw_bday) || raw_bday == null) continue;
+		            			int mm= Integer.parseInt(raw_bday.split("/")[0]);
+		            			int dd= Integer.parseInt(raw_bday.split("/")[1]);
+		            			int yyyy=Calendar.getInstance().get(Calendar.YEAR);
+			            		beginTime.set(yyyy, mm, dd, 9, 00);
+			            		startMillis = beginTime.getTimeInMillis();			            		
+			            		ContentValues values = new ContentValues();
+			            		values.put(Events.DTSTART, startMillis);			            		
+			            		values.put(Events.TITLE, frnd.getName() + "'s BirthDay");
+			            		values.put(Events.DESCRIPTION, "Bithday Reminder Added by FBBG Cal Sync");
+			            		values.put(Events.CALENDAR_ID, calID);
+			            		values.put(Events.EVENT_TIMEZONE, "Asia/Kolkata");
+			            		values.put(Events.DURATION, "PT1H");
+			            		values.put(Events.RRULE, "FREQ=YEARLY");
+			            		ContentResolver cr = getContentResolver();
+			            		Uri uri = cr.insert(Events.CONTENT_URI, values);
+			            		long eventID = Long.parseLong(uri.getLastPathSegment());
+			            		Log.d("bfgActivity", "Event ID: " + eventID);
+		            		}
+		            		mText.setText("Birthdays added Successfully!!!");		            		
+		            		Log.d("bfgActivity", "END of adding to calendar!!");
+		            	}
+		            }
+        		});
+        mRequestButton.setVisibility(mFacebook.isSessionValid() ? View.VISIBLE : View.INVISIBLE);
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode,
-                                    Intent data) {
+    protected void onActivityResult(int requestCode, int resultCode, Intent data)
+    {
         mFacebook.authorizeCallback(requestCode, resultCode, data);
     }
     
-    public class SampleAuthListener implements AuthListener {
+    public class SampleAuthListener implements AuthListener 
+    {
 
-        public void onAuthSucceed() {
+        public void onAuthSucceed() 
+        {
             mText.setText("You have logged in! ");
             mRequestButton.setVisibility(View.VISIBLE);
         }
 
-        public void onAuthFail(String error) {
+        public void onAuthFail(String error) 
+        {
             mText.setText("Login Failed: " + error);
         }
     }
 
-    public class SampleLogoutListener implements LogoutListener {
-        public void onLogoutBegin() {
+    public class SampleLogoutListener implements LogoutListener 
+    {
+        public void onLogoutBegin() 
+        {
             mText.setText("Logging out...");
             fLogout = true;            
         }
 
-        public void onLogoutFinish() {
+        public void onLogoutFinish() 
+        {
             mText.setText("You have logged out! ");
             mRequestButton.setVisibility(View.INVISIBLE);
             mProgressBar.setVisibility(View.INVISIBLE);
         }
     }
     
-    public class FriendsListListener extends BaseRequestListener {
+    public class FriendsListListener extends BaseRequestListener 
+    {
 
-        public void onComplete(final String response, final Object state) {
-            try {
+        public void onComplete(final String response, final Object state) 
+        {
+            try 
+            {
                 Log.d("bfgActivity", "Response: " + response.toString());
                 JSONObject json = Util.parseJson(response);
                 JSONArray jArray = json.getJSONArray("data");                
@@ -168,7 +213,7 @@ public class bfgActivity extends Activity {
                 	mFriendData.put(ff.getFID(), ff);
                 	FriendsBdayListener fBDListener = new FriendsBdayListener();
                     try {
-                        String resp = mFacebook.request(ff.getFID(), params, "GET");                        
+                        String resp = mFacebook.request(ff.getFID(), params, "GET");
                         fBDListener.onComplete(resp, state);
                     } catch (FileNotFoundException e) {
                     	fBDListener.onFileNotFoundException(e, state);
@@ -184,13 +229,13 @@ public class bfgActivity extends Activity {
                         }
                     });
                 }
-                if(!fLogout) fComplete= true;            
+                if(!fLogout) fComplete= true;
                 bfgActivity.this.runOnUiThread(new Runnable() {
                     public void run() {
                     	if(!fLogout) {
                     		mRequestButton.setVisibility(View.VISIBLE);
                     		mText.setText("Birthday Retrieval Complete!");                    		
-                    		mRequestButton.setText("Continue...");
+                    		mRequestButton.setText("Add to Google Calendar");
                     	}
                     	else {
                     		mRequestButton.setVisibility(View.INVISIBLE);
@@ -226,9 +271,9 @@ public class bfgActivity extends Activity {
                 mFriendData.remove(json.getString("id"));
                 mFriendData.put(ff.getFID(), ff);
             } catch (JSONException e) {
-            	ff.setBday("");
+            	//ff.setBday("");
             	mFriendData.remove(ff.getFID());
-                mFriendData.put(ff.getFID(), ff);
+                //mFriendData.put(ff.getFID(), ff);
                 Log.w("bfgActivity", "JSON ERROR: Possibly birthday not available.");
             } catch (FacebookError e) {
                 Log.w("bfgActivity", "Facebook Error: " + e.getMessage());

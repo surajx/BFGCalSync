@@ -17,7 +17,6 @@
 package com.bfgsync.fb;
 
 import com.bfgsync.R;
-import com.bfgsync.R.drawable;
 import com.bfgsync.fb.BaseRequestListener;
 import com.bfgsync.fb.SessionEvents.AuthListener;
 import com.bfgsync.fb.SessionEvents.LogoutListener;
@@ -115,8 +114,6 @@ public class LoginButton extends ImageButton {
     
     private class LogoutRequestListener extends BaseRequestListener {
         public void onComplete(String response, final Object state) {
-            // callback should be run in the original thread, 
-            // not the background thread
             mHandler.post(new Runnable() {
                 public void run() {
                     SessionEvents.onLogoutFinish();
