@@ -138,7 +138,7 @@ public class bfgActivity extends Activity
 		            			int yyyy = Calendar.getInstance().get(Calendar.YEAR);
 			            		long epoch=0;
 			            		try {
-									epoch= new java.text.SimpleDateFormat ("MM/dd/yyyy HH:mm:ss").parse(mm + "/" + dd + "/" + yyyy + " 09:00:00").getTime();
+			            			epoch= new java.text.SimpleDateFormat ("MM/dd/yyyy HH:mm:ss").parse(mm + "/" + dd + "/" + yyyy + " 09:00:00").getTime();
 									Log.d("bfgActivity", "epoch: " + epoch);
 								} 
 			            		catch (ParseException e) { 
