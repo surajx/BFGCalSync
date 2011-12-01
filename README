@@ -1,1 +1,5 @@
-This Project is a work in progress. THe goal is to understand facebook graph API and Android app development.
+Android app to get Friends's birthday from facebook and enter as a event into Google Calendar.
+This app used the newly introduced Calendar API as part of IceCream Sandwich. So minSDK would be 14.
+Version 1.0
+	*Login to Facebook via WebView.
+	*Get Birthday of friends and Update it as a yearly recurring event spanning b/w 9-10AM in Google Calendar.

@@ -3,6 +3,7 @@ package com.bfgsync.fb;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.text.ParseException;
 import java.util.Calendar;
 import java.util.HashMap;
 
@@ -17,7 +18,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.CalendarContract.Calendars;
+import android.provider.CalendarContract;
 import android.provider.CalendarContract.Events;
 import android.util.Log;
 import android.view.View;
@@ -105,34 +106,46 @@ public class bfgActivity extends Activity
 			                mText.setText("Processing...");
 		            	}
 		            	else{
-		            		mRequestButton.setVisibility(View.INVISIBLE);
+		            		//Lot of hard coding here, need to generalize!!
+		            		mRequestButton.setVisibility(View.INVISIBLE);		            		
 		            		mText.setText("Adding Events to default Calendar... Please wait!");
-  	            		    final String[] EVENT_PROJECTION = new String[] {
-		            			    Calendars._ID,                           // 0
-		            			  };
-							final int PROJECTION_ID_INDEX = 0;
-							Cursor cur = null;
-							ContentResolver crs = getContentResolver();
-							Uri uri1 = Calendars.CONTENT_URI;
-							cur = crs.query(uri1, EVENT_PROJECTION, null, null, null);
-							long calID =  0;
-							while (cur.moveToNext()) {        							  
-							    calID = cur.getLong(PROJECTION_ID_INDEX);
-							    Log.d("bfgActivity", "calID: " + calID);
-							}
-		            		long startMillis = 0;
-		            		Calendar beginTime = Calendar.getInstance();            		
+		            		Uri uri1 = CalendarContract.Calendars.CONTENT_URI;
+		            		String[] projection = new String[] {
+		            		       CalendarContract.Calendars._ID,
+		            		       CalendarContract.Calendars.ACCOUNT_NAME,
+		            		       CalendarContract.Calendars.CALENDAR_DISPLAY_NAME,
+		            		       CalendarContract.Calendars.NAME,
+		            		       CalendarContract.Calendars.CALENDAR_COLOR
+		            		};
+		            		Cursor calendarCursor = managedQuery(uri1, projection, null, null, null);
+		            		Log.d("bfgActivity", "calID Column Name : " + calendarCursor.getColumnName(0) + " Cursor row Count: "+calendarCursor.getCount() + " Cursor obj string: "+calendarCursor.toString());
+		            		long calID = 0;
+		            		while (calendarCursor.moveToNext()) {
+		            			calID = calendarCursor.getLong(0);
+		            			Log.d("bfgActivity", "calID: " + calendarCursor.getLong(0));
+		            			Log.d("bfgActivity", "Account Name: " + calendarCursor.getString(1));
+		            			Log.d("bfgActivity", "Calendar Display Name: " + calendarCursor.getString(2));
+		            			Log.d("bfgActivity", "Name: " + calendarCursor.getString(3));
+		            			Log.d("bfgActivity", "Calendar Color: " + calendarCursor.getString(4));
+		            			break;
+		            		}		            													    						    
 		            		for (FFriend frnd : mFriendData.values())
 		            		{		            					            					            			
 		            			String raw_bday=frnd.getBday();
 		            			if("".equals(raw_bday) || raw_bday == null) continue;
-		            			int mm= Integer.parseInt(raw_bday.split("/")[0]);
-		            			int dd= Integer.parseInt(raw_bday.split("/")[1]);
-		            			int yyyy=Calendar.getInstance().get(Calendar.YEAR);
-			            		beginTime.set(yyyy, mm, dd, 9, 00);
-			            		startMillis = beginTime.getTimeInMillis();			            		
+		            			int mm = Integer.parseInt(raw_bday.split("/")[0]);
+		            			int dd = Integer.parseInt(raw_bday.split("/")[1]);
+		            			int yyyy = Calendar.getInstance().get(Calendar.YEAR);
+			            		long epoch=0;
+			            		try {
+									epoch= new java.text.SimpleDateFormat ("MM/dd/yyyy HH:mm:ss").parse(mm + "/" + dd + "/" + yyyy + " 09:00:00").getTime();
+									Log.d("bfgActivity", "epoch: " + epoch);
+								} 
+			            		catch (ParseException e) { 
+									e.printStackTrace();
+								}
 			            		ContentValues values = new ContentValues();
-			            		values.put(Events.DTSTART, startMillis);			            		
+			            		values.put(Events.DTSTART, epoch);			            		
 			            		values.put(Events.TITLE, frnd.getName() + "'s BirthDay");
 			            		values.put(Events.DESCRIPTION, "Bithday Reminder Added by FBBG Cal Sync");
 			            		values.put(Events.CALENDAR_ID, calID);
