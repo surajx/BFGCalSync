@@ -12,8 +12,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.Activity;
-import android.content.ContentResolver;
+import android.content.AsyncQueryHandler;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
@@ -51,6 +52,7 @@ public class bfgActivity extends Activity
 	private LoginButton mLoginButton;
 	private TextView mText;
 	private Button mRequestButton;
+	QueryHandler mQueryHandler;
 	
 	//FB Objects
 	private Facebook mFacebook;
@@ -77,6 +79,7 @@ public class bfgActivity extends Activity
         mRequestButton = (Button) findViewById(R.id.requestButton);
         mProgressBar=(ProgressBar)findViewById(R.id.progressbar_Horizontal);
         mProgressBar.setVisibility(View.INVISIBLE);
+        mQueryHandler = new QueryHandler(this);
         
         //Initialising Facebook controls.
         mFacebook = new Facebook(APP_ID);
@@ -107,8 +110,8 @@ public class bfgActivity extends Activity
 		            	}
 		            	else{
 		            		//Lot of hard coding here, need to generalize!!
-		            		mRequestButton.setVisibility(View.INVISIBLE);		            		
-		            		mText.setText("Adding Events to default Calendar... Please wait!");
+		            		mRequestButton.setVisibility(View.INVISIBLE);
+		            		mText.setText("Adding Events to default Calendar... Please wait!!");
 		            		Uri uri1 = CalendarContract.Calendars.CONTENT_URI;
 		            		String[] projection = new String[] {
 		            		       CalendarContract.Calendars._ID,
@@ -128,9 +131,9 @@ public class bfgActivity extends Activity
 		            			Log.d("bfgActivity", "Name: " + calendarCursor.getString(3));
 		            			Log.d("bfgActivity", "Calendar Color: " + calendarCursor.getString(4));
 		            			break;
-		            		}		            													    						    
+		            		}
 		            		for (FFriend frnd : mFriendData.values())
-		            		{		            					            					            			
+		            		{	            					            					            			
 		            			String raw_bday=frnd.getBday();
 		            			if("".equals(raw_bday) || raw_bday == null) continue;
 		            			int mm = Integer.parseInt(raw_bday.split("/")[0]);
@@ -140,22 +143,19 @@ public class bfgActivity extends Activity
 			            		try {
 			            			epoch= new java.text.SimpleDateFormat ("MM/dd/yyyy HH:mm:ss").parse(mm + "/" + dd + "/" + yyyy + " 09:00:00").getTime();
 									Log.d("bfgActivity", "epoch: " + epoch);
-								} 
+								}
 			            		catch (ParseException e) { 
 									e.printStackTrace();
 								}
 			            		ContentValues values = new ContentValues();
-			            		values.put(Events.DTSTART, epoch);			            		
+			            		values.put(Events.DTSTART, epoch);
 			            		values.put(Events.TITLE, frnd.getName() + "'s BirthDay");
 			            		values.put(Events.DESCRIPTION, "Bithday Reminder Added by FBBG Cal Sync");
 			            		values.put(Events.CALENDAR_ID, calID);
 			            		values.put(Events.EVENT_TIMEZONE, "Asia/Kolkata");
 			            		values.put(Events.DURATION, "PT1H");
 			            		values.put(Events.RRULE, "FREQ=YEARLY");
-			            		ContentResolver cr = getContentResolver();
-			            		Uri uri = cr.insert(Events.CONTENT_URI, values);
-			            		long eventID = Long.parseLong(uri.getLastPathSegment());
-			            		Log.d("bfgActivity", "Event ID: " + eventID);
+			            		mQueryHandler.startInsert(0, frnd, Events.CONTENT_URI, values);
 		            		}
 		            		mText.setText("Birthdays added Successfully!!!");		            		
 		            		Log.d("bfgActivity", "END of adding to calendar!!");
@@ -211,7 +211,7 @@ public class bfgActivity extends Activity
             {
                 Log.d("bfgActivity", "Response: " + response.toString());
                 JSONObject json = Util.parseJson(response);
-                JSONArray jArray = json.getJSONArray("data");                
+                JSONArray jArray = json.getJSONArray("data");
                 final int jArrayLen = jArray.length();
             	Bundle params = new Bundle();
             	params.putString("fields", "birthday");
@@ -284,13 +284,24 @@ public class bfgActivity extends Activity
                 mFriendData.remove(json.getString("id"));
                 mFriendData.put(ff.getFID(), ff);
             } catch (JSONException e) {
-            	//ff.setBday("");
             	mFriendData.remove(ff.getFID());
-                //mFriendData.put(ff.getFID(), ff);
                 Log.w("bfgActivity", "JSON ERROR: Possibly birthday not available.");
             } catch (FacebookError e) {
                 Log.w("bfgActivity", "Facebook Error: " + e.getMessage());
             }
         }
+    }
+    
+    private static final class QueryHandler extends AsyncQueryHandler {
+    	
+    	public QueryHandler(Context context){
+    		super(context.getContentResolver());    		
+    	}
+    	
+    	@Override
+    	protected void onInsertComplete(int TOKEN, Object frnd, Uri uri){
+    		long eventID = Long.parseLong(uri.getLastPathSegment());
+    		Log.d("bfgActivity", "Calendar Insert Completed for FB friend : " + ((FFriend) frnd).getName() + "\nEvent ID: " + eventID);
+    	}
     }
 }
