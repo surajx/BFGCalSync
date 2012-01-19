@@ -23,6 +23,7 @@ public final class R {
         public static final int white=0x7f020008;
     }
     public static final class id {
+        public static final int cancelButton=0x7f050004;
         public static final int login=0x7f050000;
         public static final int progressbar_Horizontal=0x7f050002;
         public static final int requestButton=0x7f050003;
@@ -33,6 +34,8 @@ public final class R {
     }
     public static final class string {
         public static final int app_name=0x7f040000;
+        public static final int cancel=0x7f040002;
         public static final int request=0x7f040001;
+        public static final int top_banner_desc=0x7f040003;
     }
 }

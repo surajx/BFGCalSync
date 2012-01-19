@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    >
-	<ImageView
+    android:orientation="vertical" >
+	<ImageView	    
 		android:src="@drawable/top_banner"
+		android:contentDescription="@string/top_banner_desc"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
 		android:gravity="center_vertical|center_horizontal"
@@ -32,12 +32,24 @@
 		android:id="@+id/progressbar_Horizontal"
 		android:max="10000000"
 	/>
-	<Button android:id="@+id/requestButton"
-		android:text="@string/request"
-		android:visibility="invisible"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content" 
-		android:paddingRight="20dp" 
-		android:paddingLeft="20dp"
-	/>
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal" >
+		<Button android:id="@+id/requestButton"
+			android:text="@string/request"
+			android:visibility="invisible"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:paddingRight="20dp"
+			android:paddingLeft="20dp" />
+		<Button android:id="@+id/cancelButton"
+		    android:text="@string/cancel"
+		    android:visibility="invisible"
+		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:paddingLeft="20dp"
+		    android:paddingRight="20dp"
+		    android:layout_alignParentRight="true" />
+	</RelativeLayout>
 </LinearLayout>
