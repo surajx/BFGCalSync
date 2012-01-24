@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">FBBG Cal Sync</string>    
-    <string name="request">Get BirthDay!</string>
+    <string name="request">Add BirthDay!</string>
     <string name="cancel">CANCEL</string>
     <string name="top_banner_desc">App Main Banner</string>
+    <string name="alert_dialog_title">Pick a Calendar</string>
+    <string name="alert_dialog_ok">OK</string>    
 </resources>
